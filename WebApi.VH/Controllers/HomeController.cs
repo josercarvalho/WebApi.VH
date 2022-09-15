@@ -17,11 +17,11 @@ namespace WebApi.VH.Controllers
         }
 
   
-        [HttpGet(Name = "GetUrlUser")]
-        public async Task<IActionResult> GetUrlUser(int user)
+        [HttpGet("busca/{id}")]
+        public async Task<IActionResult> GetUser(int id)
         {
 
-            if (user == 0) return BadRequest("ID do usu·rio n„o pode ser 0 ou vazio!");
+            if (id == 0) return BadRequest("ID do usu√°rio n√£o pode ser 0 ou vazio!");
 
             var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: false);
             
@@ -31,7 +31,7 @@ namespace WebApi.VH.Controllers
 
             JsonSerializerOptions options = new JsonSerializerOptions();
 
-            var url =  $@"{urlPath}{user}";
+            var url =  $"{urlPath}{id}";
 
             using (var httpClient = new HttpClient())
             {
