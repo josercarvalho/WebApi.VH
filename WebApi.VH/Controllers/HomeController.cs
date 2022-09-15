@@ -1,51 +1,63 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
-using WebApi.VH.Model;
+using System.Net;
+using WebApi.VH.Interfaces;
 
 namespace WebApi.VH.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/v1/[controller]")]
     public class HomeController : ControllerBase
     {
 
         private readonly ILogger<HomeController> _logger;
+        public readonly IUser _userService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IUser userService)
         {
             _logger = logger;
+            _userService = userService;
         }
 
-  
-        [HttpGet("busca/{id}")]
-        public async Task<IActionResult> GetUser(int id)
+        [HttpGet("GetFibonacci/{id}")]
+        public string Get(int id) => SequenciaFibonacci(id);
+
+        private static string SequenciaFibonacci(int id)
         {
+            int numeroAnterior = 0, numeroAtual = 1;
 
-            if (id == 0) return BadRequest("ID do usuário não pode ser 0 ou vazio!");
+            string retorno = "0, 1 ";
 
-            var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: false);
-            
-            IConfiguration config = builder.Build();
-             
-            string urlPath = config.GetValue<string>("ConnectionUrl:value"); 
+            var sequenciaFibonacci = new List<int> { 0, 1 };
 
-            JsonSerializerOptions options = new JsonSerializerOptions();
-
-            var url =  $"{urlPath}{id}";
-
-            using (var httpClient = new HttpClient())
+            while (sequenciaFibonacci.Count < id)
             {
-                var response = await httpClient.GetAsync(url);
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var usuarios = JsonSerializer.Deserialize<Usuario>(content);
-                    return Ok(usuarios);
+                var novoNumero = sequenciaFibonacci[numeroAnterior] + sequenciaFibonacci[numeroAtual];
+                sequenciaFibonacci.Add(novoNumero);
+                retorno = retorno + ", " + novoNumero.ToString();
 
-                }
+                numeroAtual++;
+                numeroAnterior++;
             }
 
-            return StatusCode((int)Response.StatusCode);
+            return retorno;
+        }
+
+        [HttpGet("buscaPorId/{id}")]
+        public async Task<IActionResult> GetUser(string id)
+        {
+
+            if (String.IsNullOrEmpty(id)) return BadRequest("ID do usuário não pode ser 0 ou vazio!");
+
+            var response = await _userService.BuscarUsuarioPorId(id);
+
+            if (response.CodigoHttp == HttpStatusCode.OK)
+            {
+                return Ok(response.DadosRetorno);
+            }
+            else
+            {
+                return StatusCode((int)response.CodigoHttp, response.ErroRetorno);
+            }
 
         }
     }
