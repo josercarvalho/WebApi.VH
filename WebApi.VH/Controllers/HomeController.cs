@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using WebApi.VH.Model;
 
 namespace WebApi.VH.Controllers
@@ -24,11 +22,16 @@ namespace WebApi.VH.Controllers
         {
 
             if (user == 0) return BadRequest("ID do usuário não pode ser 0 ou vazio!");
- 
-            string url; 
+
+            var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: false);
+            
+            IConfiguration config = builder.Build();
+             
+            string urlPath = config.GetValue<string>("ConnectionUrl:value"); 
+
             JsonSerializerOptions options = new JsonSerializerOptions();
 
-            url =  $@"https://gorest.co.in/public/v2/users/{user}";
+            var url =  $@"{urlPath}{user}";
 
             using (var httpClient = new HttpClient())
             {
